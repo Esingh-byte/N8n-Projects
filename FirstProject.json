@@ -1,0 +1,70 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        144
+      ],
+      "id": "67c6dbd9-4e89-46dd-b21b-b1cf5c1e0006",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "v2KTeC09z4EnvVzK",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "5584135810",
+        "text": "={{ \n  '📧 New Email Received!\\n\\n' +\n  'From: ' + $json.From + '\\n' +\n  'Subject: ' + $json.Subject + '\\n' +\n  'To: ' + $json.To\n}}\n\n",
+        "additionalFields": {}
+      },
+      "id": "383cbfbe-b408-460c-a6a0-2a19a4f9cb27",
+      "name": "Send Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        144
+      ],
+      "webhookId": "73b9c6fd-e522-4d21-8f5b-21fd3dfe514a",
+      "credentials": {
+        "telegramApi": {
+          "id": "3SmifAvnx6JTfJSV",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "142e0433685f99d1e36ca344e92729db892230e32e9bfb2805c4d703ceee6751"
+  }
+}
