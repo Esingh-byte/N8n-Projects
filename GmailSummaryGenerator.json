@@ -5,7 +5,7 @@
         "pollTimes": {
           "item": [
             {
-              "mode": "everyMinute"
+              "mode": "everyMinute" 
             }
           ]
         },
