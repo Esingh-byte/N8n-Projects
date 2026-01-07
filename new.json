@@ -1,0 +1,538 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Fill the details",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "Name",
+              "fieldLabel": "Name:",
+              "placeholder": "Enter your full name",
+              "requiredField": true
+            },
+            {
+              "fieldName": "Roll_number",
+              "fieldLabel": "Roll Number:",
+              "placeholder": "Enter you Roll Number"
+            },
+            {
+              "fieldName": "email",
+              "fieldLabel": "Email:",
+              "placeholder": "Enter your email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.4,
+      "position": [
+        -80,
+        80
+      ],
+      "id": "f8299e4c-0d3e-467f-b09e-a1823b2df3d1",
+      "name": "On form submission",
+      "webhookId": "d9eca45a-caf4-40b1-a915-3ef86026f6e0"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a project allocation assistant.\n\nYour task is to assign ONE short engineering project name to the student\nand classify it into exactly ONE domain.\n\nStudent:\nName: {{$json.name}}\nRoll Number: {{$json.roll_number}}\n\nRules:\n- Project name must be max 6 words\n- Project name must be realistic and engineering-related\n- Choose ONLY ONE domain from this list:\n  AI/ML, Web Dev, IoT, Cybersecurity, Data Science\n- Output MUST be valid JSON\n- No explanations\n- No extra text\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        304,
+        80
+      ],
+      "id": "88555315-e4fb-4197-88fa-2cc053fa2fd9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        208,
+        288
+      ],
+      "id": "2af67625-255b-4987-9206-bc1f31d9d1e3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1duhM0i1DtYRHe4Q",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ivW1RzJg-YQ4ZiELfQUVMFvVG_vH_V_HzL93an3KxYk",
+          "mode": "list",
+          "cachedResultName": "Teachers",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ivW1RzJg-YQ4ZiELfQUVMFvVG_vH_V_HzL93an3KxYk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ivW1RzJg-YQ4ZiELfQUVMFvVG_vH_V_HzL93an3KxYk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        944,
+        80
+      ],
+      "id": "64bf4351-6322-4566-9d26-5c4a449a3432",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "svqAtFZSeDFntpZ7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b561d4d1-2a1e-47fe-bc64-fa5c1a419400",
+              "leftValue": "={{ $json.domain }}",
+              "rightValue": "={{ $('Code in JavaScript1').item.json.domain }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "e3c5fdd9-1e95-484d-9af9-33de015e089a",
+              "leftValue": "={{ $('AI Agent').item.json.output }}",
+              "rightValue": "={{ $('Get row(s) in sheet').item.json['Max Students'].toString() }}\n",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        80
+      ],
+      "id": "335aba9c-563b-4078-9650-1bc444807850",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  teacher_name: $json[\"Teacher Name\"],\n  domain: $json[\"Domain\"],\n  mentor_email: $json[\"mentor_email\"],\n  current_assigned: Number($json[\"Current Assigned\"] || 0),\n  max_students: Number($json[\"Max Students\"]),\n}];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        64
+      ],
+      "id": "4d49bef5-269b-481d-af95-5ea15cfda275",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1eBgEQCQo175SnPhMwZOnpYN2FVzdZeeag0DlwbMzgXw",
+          "mode": "list",
+          "cachedResultName": "Student-Mentor Mapping",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eBgEQCQo175SnPhMwZOnpYN2FVzdZeeag0DlwbMzgXw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eBgEQCQo175SnPhMwZOnpYN2FVzdZeeag0DlwbMzgXw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "mentor_name": "={{ $json.teacher_name }}"
+          },
+          "matchingColumns": [
+            "mentor_name"
+          ],
+          "schema": [
+            {
+              "id": "mentor_name",
+              "displayName": "mentor_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mentor_email",
+              "displayName": "mentor_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "current_assigned",
+              "displayName": "current_assigned",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_students",
+              "displayName": "max_students",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1824,
+        96
+      ],
+      "id": "d3048ad9-49cb-4d53-877f-f037fe3fbb75",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "svqAtFZSeDFntpZ7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $node[\"AI Agent\"].json.output;\n\n// Remove ```json and ``` if present\nconst cleaned = raw\n  .replace(/```json/g, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\nconst parsed = JSON.parse(cleaned);\n\nreturn [{\n  project_name: parsed.project_name,\n  domain: parsed.domain\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        80
+      ],
+      "id": "fba7a13a-6e57-4d46-8778-e014d4304a07",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xswpCCZk_rMGetRiA0YpahTXgbAQCIX_uGKAE6BUzwI",
+          "mode": "list",
+          "cachedResultName": "Student_Registrations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xswpCCZk_rMGetRiA0YpahTXgbAQCIX_uGKAE6BUzwI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1091061043,
+          "mode": "list",
+          "cachedResultName": "Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xswpCCZk_rMGetRiA0YpahTXgbAQCIX_uGKAE6BUzwI/edit#gid=1091061043"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json.Name }}",
+            "Roll_number": "={{ $('On form submission').item.json.Roll_number }}",
+            "email": "={{ $('On form submission').item.json.email }}",
+            "submittedAt": "={{ $('On form submission').item.json.submittedAt }}",
+            "formMode": "={{ $('On form submission').item.json.formMode }}",
+            "assigned_project": "={{ $('AI Agent').item.json.output }}",
+            "domain": "={{ $('Code in JavaScript1').item.json.domain }}",
+            "mentor_name": "={{ $json.teacher_name }}",
+            "mentor_email": "={{ $json.mentor_email }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Roll_number",
+              "displayName": "Roll_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "formMode",
+              "displayName": "formMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_project",
+              "displayName": "assigned_project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "domain",
+              "displayName": "domain",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mentor_name",
+              "displayName": "mentor_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mentor_email",
+              "displayName": "mentor_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1168,
+        80
+      ],
+      "id": "9dee080f-f34c-45d6-9c64-9ee85761fd6b",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "svqAtFZSeDFntpZ7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json.email }}",
+        "subject": "Project Allocation and Mentor Details",
+        "emailType": "text",
+        "message": "=Hello {{$json.Name}},\n\nYour project: {{ $json.assigned_project }}\nDomain: {{$json.domain}}\n\nAssigned Mentor:\n{{$json.mentor_name}}\nEmail: {{$json.mentor_email}}\n\nPlease contact your mentor for guidance.\n\nBest regards,\nProject Allocation Team\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        96
+      ],
+      "id": "252fb095-d471-4fe7-a56f-beaef46b9458",
+      "name": "Send a message to student",
+      "webhookId": "a21b65c0-7a3a-4097-8e28-2459de78f0ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "v2KTeC09z4EnvVzK",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message to student",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "142e0433685f99d1e36ca344e92729db892230e32e9bfb2805c4d703ceee6751"
+  }
+}
